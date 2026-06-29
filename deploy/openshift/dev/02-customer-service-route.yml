@@ -1,0 +1,18 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: customer-service
+  labels:
+    app.kubernetes.io/name: customer-service
+    app.kubernetes.io/part-of: customer
+    app.kubernetes.io/instance: customer-dev
+    environment: dev
+spec:
+  to:
+    kind: Service
+    name: customer-service
+  port:
+    targetPort: 8080-tcp
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
