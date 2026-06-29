@@ -21,4 +21,4 @@ management:
 logging:
   level:
     root: INFO
-    com.igorartsoft.customerservice: DEBUG
+    dev.igorartsoft.customerservice: DEBUG
