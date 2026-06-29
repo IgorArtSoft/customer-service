@@ -1,12 +1,12 @@
 server:
-  port: 8083
+  port: "${SERVER_PORT:8083}"
 
 spring:
   application:
     name: customer-service
 
   mongodb:
-    uri: "mongodb://admin:admin123@localhost:27017/customerdb?authSource=admin"
+    uri: "${MONGODB_URI:mongodb://admin:admin123@localhost:27017/customerdb?authSource=admin}"
 
   data:
     mongodb:
