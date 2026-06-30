@@ -66,6 +66,7 @@ replay_pid*
 *DONTCOMMIT*
 
 # Local OpenShift secret files with real values
+deploy/openshift/**/secret-templates/*.local.yml
 deploy/openshift/**/secret-local*.yml
 deploy/openshift/**/secrets-local*.yml
 deploy/openshift/**/.env
