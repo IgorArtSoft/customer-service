@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import dev.igorartsoft.customerservice.dto.CustomerCreateRequest;
 import dev.igorartsoft.customerservice.dto.CustomerPatchRequest;
@@ -28,7 +30,10 @@ import dev.igorartsoft.customerservice.dto.CustomerSelfUpdateRequest;
 import dev.igorartsoft.customerservice.dto.CustomerUpdateRequest;
 import dev.igorartsoft.customerservice.service.CustomerService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
+@Validated
 @RestController
 @RequestMapping("/customers")
 public class CustomerController {
@@ -92,31 +97,43 @@ public class CustomerController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<CustomerResponse> createCustomer(
-            @Valid @RequestBody CustomerCreateRequest request
-    ) {
+    public ResponseEntity<CustomerResponse> createCustomer(@Valid @RequestBody CustomerCreateRequest request) {
         CustomerResponse response = customerService.createCustomer(request);
 
+        /*
+         * It uses a URI template variable instead of manual string concatenation. 
+         * Spring’s ServletUriComponentsBuilder.fromCurrentRequestUri() builds from the current request URI without copying the query string, 
+         * and UriComponentsBuilder.build(...) expands URI variables into a URI.
+         */
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequestUri()
+                .path("/{customerId}")
+                .build(response.customerId());
+
         return ResponseEntity
-                .created(URI.create("/customers/" + response.customerId()))
+                .created(location)
                 .body(response);
     }
-
+    
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<CustomerResponse>> getCustomers(
-            @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size
-    ) {
-        int safePage = Math.max(page, DEFAULT_PAGE);
-        int safeSize = Math.min(Math.max(size, 1), MAX_SIZE);
+            @RequestParam(defaultValue = "" + DEFAULT_PAGE)
+            @Min(value = 0, message = "Page must be greater than or equal to 0")
+            int page,
 
-        Pageable pageable = PageRequest.of(safePage, safeSize);
+            @RequestParam(defaultValue = "" + DEFAULT_SIZE)
+            @Min(value = 1, message = "Size must be greater than or equal to 1")
+            @Max(value = MAX_SIZE, message = "Size must be less than or equal to 100")
+            int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+
         Page<CustomerResponse> response = customerService.getCustomers(pageable);
 
         return ResponseEntity.ok(response);
     }
-
+    
     @GetMapping("/{customerId}")
     @PreAuthorize("hasRole('ADMIN') or @customerSecurity.canAccessCustomer(#customerId, authentication)")
     public ResponseEntity<CustomerResponse> getCustomer(

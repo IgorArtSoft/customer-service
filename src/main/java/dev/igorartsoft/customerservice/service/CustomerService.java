@@ -81,13 +81,11 @@ public class CustomerService {
 
         validateEmailCanBeUsedByThisCustomer(request.email(), customer);
 
-        CustomerStatus status = parseStatus(request.status());
-
         customer.setEmail(request.email());
         customer.setFirstName(request.firstName());
         customer.setLastName(request.lastName());
         customer.setPhone(request.phone());
-        customer.setStatus(status);
+        customer.setStatus(request.status());
         customer.setAddress(toAddress(request.address()));
         customer.setUpdatedAt(Instant.now());
 

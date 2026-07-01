@@ -1,9 +1,10 @@
 package dev.igorartsoft.customerservice.repository;
 
-import dev.igorartsoft.customerservice.model.Customer;
+import java.util.Optional;
+
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-import java.util.Optional;
+import dev.igorartsoft.customerservice.model.Customer;
 
 public interface CustomerRepository extends MongoRepository<Customer, String> {
 

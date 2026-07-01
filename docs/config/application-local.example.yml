@@ -1,0 +1,29 @@
+server:
+  port: "${SERVER_PORT:8083}"
+
+spring:
+  application:
+    name: customer-service
+
+  data:
+    mongodb:
+      uri: "${MONGODB_URI:mongodb://admin:admin123@localhost:27017/customerdb?authSource=admin}"
+      auto-index-creation: false
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: "${OIDC_ISSUER_URI:http://localhost:8180/realms/customer-microservice}"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    root: INFO
+    dev.igorartsoft.customerservice: DEBUG
+    org.springframework.security: INFO
