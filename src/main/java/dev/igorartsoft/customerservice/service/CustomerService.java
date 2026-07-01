@@ -115,9 +115,9 @@ public class CustomerService {
         }
 
         if (request.status() != null) {
-            customer.setStatus(parseStatus(request.status()));
+            customer.setStatus(request.status());
         }
-
+        
         if (request.address() != null) {
             customer.setAddress(patchAddress(customer.getAddress(), request.address()));
         }
@@ -219,16 +219,6 @@ public class CustomerService {
         if (customerRepository.existsByEmail(email)) {
             throw new CustomerAlreadyExistsException(
                     "Customer with email already exists: " + email
-            );
-        }
-    }
-
-    private CustomerStatus parseStatus(String status) {
-        try {
-            return CustomerStatus.valueOf(status.toUpperCase());
-        } catch (Exception ex) {
-            throw new IllegalArgumentException(
-                    "Invalid customer status. Allowed values: ACTIVE, INACTIVE"
             );
         }
     }

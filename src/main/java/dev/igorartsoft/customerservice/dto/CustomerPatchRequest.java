@@ -1,7 +1,10 @@
 package dev.igorartsoft.customerservice.dto;
 
+import dev.igorartsoft.customerservice.model.CustomerStatus;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
@@ -18,14 +21,24 @@ public record CustomerPatchRequest(
         String email,
         
         @Pattern(
-                regexp = "^(?:\\+[1-9][0-9]{7,14}|[0-9]{7,15})$",
+                regexp = CustomerValidationPatterns.PHONE,
                 message = "Phone must contain 7-15 digits, optionally starting with + country code, for example +14165551234 or 4165551234"
         )
         String phone,
                 
-        String status,
+        CustomerStatus status,
 
         @Valid
         PostalAddressPatchRequest address
+        
+       
 ) {
+	@AssertTrue(message = "At least one field must be provided")
+	public boolean hasAtLeastOneField() {
+	    return firstName != null
+	            || lastName != null
+	            || phone != null
+	            || status != null
+	            || address != null;
+	}
 }
