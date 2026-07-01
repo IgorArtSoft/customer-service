@@ -5,9 +5,11 @@ spring:
   application:
     name: customer-service
 
+  mongodb:
+    uri: "mongodb://admin:admin123@localhost:27017/customerdb?authSource=admin"
+
   data:
     mongodb:
-      uri: "${MONGODB_URI:mongodb://admin:admin123@localhost:27017/customerdb?authSource=admin}"
       auto-index-creation: false
 
   security:
@@ -23,6 +25,9 @@ management:
         include: health,info
 
 logging:
+  file:
+    name: logs/customer-service.log
+
   level:
     root: INFO
     dev.igorartsoft.customerservice: DEBUG

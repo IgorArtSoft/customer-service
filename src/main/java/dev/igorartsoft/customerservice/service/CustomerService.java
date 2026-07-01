@@ -57,8 +57,8 @@ public class CustomerService {
                 request.phone(),
                 CustomerStatus.ACTIVE,
                 toAddress(request.address()),
-                now,
-                now
+                now, now, 
+                null, null
         );
 
         Customer saved = customerRepository.save(customer);

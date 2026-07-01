@@ -42,7 +42,9 @@ public class Customer {
             CustomerStatus status,
             Address address,
             Instant createdAt,
-            Instant updatedAt
+            Instant updatedAt,
+            String oidcIssuer,
+            String oidcSubject
     ) {
         this.customerId = customerId;
         this.email = email;
@@ -53,6 +55,8 @@ public class Customer {
         this.address = address;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.oidcIssuer = oidcIssuer;
+        this.oidcSubject = oidcSubject;
     }
 
     public String getId() {
