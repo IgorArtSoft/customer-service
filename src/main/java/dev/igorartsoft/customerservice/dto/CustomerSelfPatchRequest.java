@@ -2,12 +2,10 @@ package dev.igorartsoft.customerservice.dto;
 
 import jakarta.validation.Valid;
 
-public record CustomerPatchRequest(
-        String email,
+public record CustomerSelfPatchRequest(
         String firstName,
         String lastName,
         String phone,
-        String status,
 
         @Valid
         PostalAddressPatchRequest address

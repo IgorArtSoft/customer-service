@@ -1,18 +1,33 @@
 package dev.igorartsoft.customerservice.controller;
 
-import dev.igorartsoft.customerservice.dto.CustomerCreateRequest;
-import dev.igorartsoft.customerservice.dto.CustomerPatchRequest;
-import dev.igorartsoft.customerservice.dto.CustomerResponse;
-import dev.igorartsoft.customerservice.dto.CustomerUpdateRequest;
-import dev.igorartsoft.customerservice.service.CustomerService;
-import jakarta.validation.Valid;
+import java.net.URI;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.net.URI;
+import dev.igorartsoft.customerservice.dto.CustomerCreateRequest;
+import dev.igorartsoft.customerservice.dto.CustomerPatchRequest;
+import dev.igorartsoft.customerservice.dto.CustomerResponse;
+import dev.igorartsoft.customerservice.dto.CustomerSelfPatchRequest;
+import dev.igorartsoft.customerservice.dto.CustomerSelfUpdateRequest;
+import dev.igorartsoft.customerservice.dto.CustomerUpdateRequest;
+import dev.igorartsoft.customerservice.service.CustomerService;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/customers")
@@ -28,7 +43,55 @@ public class CustomerController {
         this.customerService = customerService;
     }
 
+    // CUSTOMER own profile operations
+
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<CustomerResponse> getMyCustomerProfile(
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        CustomerResponse response = customerService.getByOidcIdentity(
+                jwt.getIssuer().toString(),
+                jwt.getSubject()
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/me")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<CustomerResponse> updateMyCustomerProfile(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody CustomerSelfUpdateRequest request
+    ) {
+        CustomerResponse response = customerService.updateMyProfile(
+                jwt.getIssuer().toString(),
+                jwt.getSubject(),
+                request
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/me")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<CustomerResponse> patchMyCustomerProfile(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody CustomerSelfPatchRequest request
+    ) {
+        CustomerResponse response = customerService.patchMyProfile(
+                jwt.getIssuer().toString(),
+                jwt.getSubject(),
+                request
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    // ADMIN operations
+
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CustomerResponse> createCustomer(
             @Valid @RequestBody CustomerCreateRequest request
     ) {
@@ -39,7 +102,23 @@ public class CustomerController {
                 .body(response);
     }
 
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<CustomerResponse>> getCustomers(
+            @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
+            @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size
+    ) {
+        int safePage = Math.max(page, DEFAULT_PAGE);
+        int safeSize = Math.min(Math.max(size, 1), MAX_SIZE);
+
+        Pageable pageable = PageRequest.of(safePage, safeSize);
+        Page<CustomerResponse> response = customerService.getCustomers(pageable);
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{customerId}")
+    @PreAuthorize("hasRole('ADMIN') or @customerSecurity.canAccessCustomer(#customerId, authentication)")
     public ResponseEntity<CustomerResponse> getCustomer(
             @PathVariable String customerId
     ) {
@@ -47,20 +126,8 @@ public class CustomerController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping
-    public ResponseEntity<Page<CustomerResponse>> getCustomers(
-            @RequestParam(defaultValue = "" + DEFAULT_PAGE) int page,
-            @RequestParam(defaultValue = "" + DEFAULT_SIZE) int size
-    ) {
-        int safeSize = Math.min(size, MAX_SIZE);
-        Pageable pageable = PageRequest.of(page, safeSize);
-
-        Page<CustomerResponse> response = customerService.getCustomers(pageable);
-
-        return ResponseEntity.ok(response);
-    }
-
     @PutMapping("/{customerId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CustomerResponse> updateCustomer(
             @PathVariable String customerId,
             @Valid @RequestBody CustomerUpdateRequest request
@@ -70,6 +137,7 @@ public class CustomerController {
     }
 
     @PatchMapping("/{customerId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CustomerResponse> patchCustomer(
             @PathVariable String customerId,
             @Valid @RequestBody CustomerPatchRequest request
@@ -79,6 +147,7 @@ public class CustomerController {
     }
 
     @DeleteMapping("/{customerId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteCustomer(
             @PathVariable String customerId
     ) {

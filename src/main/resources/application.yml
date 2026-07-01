@@ -1,16 +1,20 @@
 server:
-  port: "${SERVER_PORT:8083}"
+  port: ${SERVER_PORT:8083}
 
 spring:
   application:
     name: customer-service
 
-  mongodb:
-    uri: "${MONGODB_URI:mongodb://admin:admin123@localhost:27017/customerdb?authSource=admin}"
-
   data:
     mongodb:
+      uri: "${MONGODB_URI:mongodb://admin:admin123@localhost:27017/customerdb?authSource=admin}"
       auto-index-creation: false
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER_URI:http://localhost:8180/realms/customer-microservice}
 
 management:
   endpoints:
@@ -22,3 +26,5 @@ logging:
   level:
     root: INFO
     dev.igorartsoft.customerservice: DEBUG
+    org.springframework.boot.autoconfigure.security: DEBUG
+    org.springframework.security: DEBUG

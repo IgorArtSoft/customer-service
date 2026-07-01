@@ -9,7 +9,7 @@ public record CustomerResponse(
         String lastName,
         String phone,
         String status,
-        AddressResponse address,
+        PostalAddressDto address,
         Instant createdAt,
         Instant updatedAt
 ) {

@@ -27,6 +27,9 @@ public class Customer {
     private Instant createdAt;
     private Instant updatedAt;
 
+    private String oidcIssuer;
+    private String oidcSubject;
+    
     public Customer() {
     }
 
@@ -131,4 +134,21 @@ public class Customer {
     public void setUpdatedAt(Instant updatedAt) {
         this.updatedAt = updatedAt;
     }
+    
+    public String getOidcIssuer() {
+        return oidcIssuer;
+    }
+
+    public void setOidcIssuer(String oidcIssuer) {
+        this.oidcIssuer = oidcIssuer;
+    }
+
+    public String getOidcSubject() {
+        return oidcSubject;
+    }
+
+    public void setOidcSubject(String oidcSubject) {
+        this.oidcSubject = oidcSubject;
+    }
+    
 }

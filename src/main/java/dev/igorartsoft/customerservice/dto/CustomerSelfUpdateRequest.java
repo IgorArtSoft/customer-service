@@ -1,17 +1,10 @@
 package dev.igorartsoft.customerservice.dto;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-public record CustomerCreateRequest(
-        @NotBlank(message = "Customer id is required")
-        String customerId,
-
-        @NotBlank(message = "Email is required")
-        @Email(message = "Email must be valid")
-        String email,
-
+public record CustomerSelfUpdateRequest(
         @NotBlank(message = "First name is required")
         String firstName,
 
@@ -21,6 +14,7 @@ public record CustomerCreateRequest(
         String phone,
 
         @Valid
+        @NotNull(message = "Address is required")
         PostalAddressDto address
 ) {
 }

@@ -22,6 +22,6 @@ public record CustomerUpdateRequest(
         String status,
 
         @Valid
-        AddressRequest address
+        PostalAddressDto address
 ) {
 }
