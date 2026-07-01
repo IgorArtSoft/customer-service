@@ -15,13 +15,17 @@ public class MongoConfigDebugRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        String mongoUri = environment.getProperty("spring.data.mongodb.uri");
+        System.out.println("ACTIVE spring.mongodb.uri = "
+                + mask(environment.getProperty("spring.mongodb.uri")));
 
-        String maskedMongoUri = mongoUri == null
-                ? null
-                : mongoUri.replaceAll("://([^:]+):([^@]+)@", "://$1:****@");
+        System.out.println("ACTIVE spring.data.mongodb.uri = "
+                + mask(environment.getProperty("spring.data.mongodb.uri")));
 
-        System.out.println("ACTIVE spring.data.mongodb.uri = " + maskedMongoUri);
-        System.out.println("ACTIVE MONGODB_URI = " + environment.getProperty("MONGODB_URI"));
+        System.out.println("ACTIVE MONGODB_URI = "
+                + environment.getProperty("MONGODB_URI"));
+    }
+
+    private String mask(String uri) {
+        return uri == null ? null : uri.replaceAll("://([^:]+):([^@]+)@", "://$1:****@");
     }
 }
