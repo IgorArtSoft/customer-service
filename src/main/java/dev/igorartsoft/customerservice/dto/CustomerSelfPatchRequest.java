@@ -1,20 +1,30 @@
 package dev.igorartsoft.customerservice.dto;
 
-import dev.igorartsoft.customerservice.validation.CustomerValidationRules;
+import dev.igorartsoft.customerservice.validation.annotation.OptionalFirstName;
+import dev.igorartsoft.customerservice.validation.annotation.OptionalLastName;
+import dev.igorartsoft.customerservice.validation.annotation.OptionalPhone;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.AssertTrue;
 
 public record CustomerSelfPatchRequest(
+
+        @OptionalFirstName
         String firstName,
+
+        @OptionalLastName
         String lastName,
-        
-        @Pattern(
-                regexp = CustomerValidationRules.PHONE,
-                message = "Phone must contain 7-15 digits, optionally starting with + country code, for example +14165551234 or 4165551234"
-        )
+
+        @OptionalPhone
         String phone,
 
         @Valid
         PostalAddressPatchRequest address
 ) {
+    @AssertTrue(message = "{customer.patch.empty}")
+    public boolean hasAtLeastOneField() {
+        return firstName != null
+                || lastName != null
+                || phone != null
+                || address != null;
+    }
 }

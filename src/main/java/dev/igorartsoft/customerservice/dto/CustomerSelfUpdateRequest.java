@@ -1,27 +1,24 @@
 package dev.igorartsoft.customerservice.dto;
 
-import dev.igorartsoft.customerservice.validation.CustomerValidationRules;
+import dev.igorartsoft.customerservice.validation.annotation.OptionalPhone;
+import dev.igorartsoft.customerservice.validation.annotation.RequiredFirstName;
+import dev.igorartsoft.customerservice.validation.annotation.RequiredLastName;
+import dev.igorartsoft.customerservice.validation.annotation.RequiredPostalAddress;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 
 public record CustomerSelfUpdateRequest(
 
-        @Size(min = 1, max = 100, message = "First name must be between 1 and 100 characters")
+        @RequiredFirstName
         String firstName,
 
-        @Size(min = 1, max = 100, message = "Last name must be between 1 and 100 characters")
+        @RequiredLastName
         String lastName,
 
-        @Pattern(
-                regexp = CustomerValidationRules.PHONE,
-                message = "Phone must contain 7-15 digits, optionally starting with + country code, for example +14165551234 or 4165551234"
-        )
+        @OptionalPhone
         String phone,
 
         @Valid
-        @NotNull(message = "Address is required")
+        @RequiredPostalAddress
         PostalAddressDto address
 ) {
 }

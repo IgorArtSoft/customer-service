@@ -5,6 +5,10 @@ spring:
   application:
     name: customer-service
 
+  messages:
+    basename: ValidationMessages
+    encoding: UTF-8
+
   mongodb:
     uri: "mongodb://admin:admin123@localhost:27017/customerdb?authSource=admin"
 
@@ -27,7 +31,6 @@ management:
 logging:
   file:
     name: logs/customer-service.log
-
   level:
     root: INFO
     dev.igorartsoft.customerservice: DEBUG
