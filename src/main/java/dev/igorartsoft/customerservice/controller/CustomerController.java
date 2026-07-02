@@ -120,11 +120,11 @@ public class CustomerController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PagedResponse<CustomerResponse>> getCustomers(
             @RequestParam(defaultValue = "" + DEFAULT_PAGE)
-            @Min(value = 0, message = "{pagination.page.min}")       
+            @Min(value = 0, message = "{pagination.page.min}")
             int page,
 
             @RequestParam(defaultValue = "" + DEFAULT_SIZE)
-            @Min(value = 1, message = "{pagination.page.min}")             
+            @Min(value = 1, message = "{pagination.size.min}")
             @Max(value = MAX_SIZE, message = "{pagination.size.max}")
             int size
     ) {
@@ -159,7 +159,7 @@ public class CustomerController {
     @PatchMapping("/{customerId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CustomerResponse> patchCustomer(
-            @PathVariable String customerId,
+            @PathVariable @RequiredCustomerId String customerId,
             @Valid @RequestBody CustomerPatchRequest request
     ) {
         CustomerResponse response = customerService.patchCustomer(customerId, request);

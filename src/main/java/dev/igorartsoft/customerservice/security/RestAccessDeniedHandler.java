@@ -1,19 +1,24 @@
 package dev.igorartsoft.customerservice.security;
 
 import java.io.IOException;
-import java.time.Instant;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
+import dev.igorartsoft.customerservice.exception.ApiErrorWriter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class RestAccessDeniedHandler implements AccessDeniedHandler {
+
+    private final ApiErrorWriter apiErrorWriter;
+
+    public RestAccessDeniedHandler(ApiErrorWriter apiErrorWriter) {
+        this.apiErrorWriter = apiErrorWriter;
+    }
 
     @Override
     public void handle(
@@ -21,17 +26,11 @@ public class RestAccessDeniedHandler implements AccessDeniedHandler {
             HttpServletResponse response,
             AccessDeniedException accessDeniedException
     ) throws IOException {
-        response.setStatus(HttpStatus.FORBIDDEN.value());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-
-        response.getWriter().write("""
-                {
-                  "timestamp": "%s",
-                  "status": 403,
-                  "code": "FORBIDDEN",
-                  "message": "Access is denied",
-                  "errors": []
-                }
-                """.formatted(Instant.now()));
+        apiErrorWriter.write(
+                response,
+                HttpStatus.FORBIDDEN,
+                "FORBIDDEN",
+                "Access is denied"
+        );
     }
 }
