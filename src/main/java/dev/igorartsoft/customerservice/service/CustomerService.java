@@ -12,6 +12,7 @@ import dev.igorartsoft.customerservice.dto.CustomerResponse;
 import dev.igorartsoft.customerservice.dto.CustomerSelfPatchRequest;
 import dev.igorartsoft.customerservice.dto.CustomerSelfUpdateRequest;
 import dev.igorartsoft.customerservice.dto.CustomerUpdateRequest;
+import dev.igorartsoft.customerservice.dto.PagedResponse;
 import dev.igorartsoft.customerservice.dto.PostalAddressDto;
 import dev.igorartsoft.customerservice.dto.PostalAddressPatchRequest;
 import dev.igorartsoft.customerservice.exception.CustomerAlreadyExistsException;
@@ -71,11 +72,21 @@ public class CustomerService {
         return toResponse(customer);
     }
 
-    public Page<CustomerResponse> getCustomers(Pageable pageable) {
-        return customerRepository.findAll(pageable)
+    public PagedResponse<CustomerResponse> getCustomers(Pageable pageable) {
+        Page<CustomerResponse> customersPage = customerRepository.findAll(pageable)
                 .map(this::toResponse);
-    }
 
+        return new PagedResponse<>(
+                customersPage.getContent(),
+                customersPage.getNumber(),
+                customersPage.getSize(),
+                customersPage.getTotalElements(),
+                customersPage.getTotalPages(),
+                customersPage.isFirst(),
+                customersPage.isLast()
+        );
+    }
+    
     public CustomerResponse updateCustomer(String customerId, CustomerUpdateRequest request) {
         Customer customer = findCustomerByCustomerId(customerId);
 

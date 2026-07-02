@@ -1,6 +1,5 @@
 package dev.igorartsoft.customerservice.security;
 
-import java.time.Instant;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -10,9 +9,6 @@ import java.util.Set;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -22,13 +18,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.HttpMediaTypeNotSupportedException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.method.annotation.HandlerMethodValidationException;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-
-import dev.igorartsoft.customerservice.exception.ApiErrorResponse;
-import dev.igorartsoft.customerservice.exception.ApiFieldError;
 
 @Configuration
 @EnableMethodSecurity
@@ -102,123 +91,6 @@ public class SecurityConfig {
         return converter;
     }
 
-    /*
-     * Handles malformed JSON, missing request body, invalid enum values,
-     * invalid date/number formats inside JSON body, etc.
-     *
-     * Example:
-     * {
-     *   "status": "BLOCKED"
-     * }
-     */
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiErrorResponse> handleHttpMessageNotReadable(
-            HttpMessageNotReadableException ex
-    ) {
-        return buildResponse(
-                HttpStatus.BAD_REQUEST,
-                "MALFORMED_REQUEST",
-                "Request body is missing, malformed, or contains invalid values",
-                List.of()
-        );
-    }
-       
-    /*
-     * Handles invalid query parameter or path variable type.
-     *
-     * Example:
-     * GET /customers?page=abc&size=20
-     */
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ApiErrorResponse> handleMethodArgumentTypeMismatch(
-            MethodArgumentTypeMismatchException ex
-    ) {
-        String expectedType = ex.getRequiredType() == null
-                ? "valid value"
-                : ex.getRequiredType().getSimpleName();
-
-        ApiFieldError fieldError = new ApiFieldError(
-                ex.getName(),
-                "Must be a valid " + expectedType
-        );
-
-        return buildResponse(
-                HttpStatus.BAD_REQUEST,
-                "INVALID_PARAMETER",
-                "Invalid request parameter",
-                List.of(fieldError)
-        );
-    }
-    
-    /*
-     * Handles unsupported Content-Type.
-     *
-     * Example:
-     * POST /customers
-     * Content-Type: text/plain
-     */
-    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
-    public ResponseEntity<ApiErrorResponse> handleHttpMediaTypeNotSupported(
-            HttpMediaTypeNotSupportedException ex
-    ) {
-        return buildResponse(
-                HttpStatus.UNSUPPORTED_MEDIA_TYPE,
-                "UNSUPPORTED_MEDIA_TYPE",
-                "Content type is not supported. Please use application/json",
-                List.of()
-        );
-    }
-    
-    /*
-     * Handles validation errors on controller method parameters.
-     *
-     * Example:
-     * GET /customers?page=-1&size=500
-     */
-    @ExceptionHandler(HandlerMethodValidationException.class)
-    public ResponseEntity<ApiErrorResponse> handleHandlerMethodValidation(
-            HandlerMethodValidationException ex
-    ) {
-        List<ApiFieldError> fieldErrors = ex.getParameterValidationResults()
-                .stream()
-                .flatMap(result -> result.getResolvableErrors()
-                        .stream()
-                        .map(error -> new ApiFieldError(
-                                getParameterName(result.getMethodParameter().getParameterName()),
-                                error.getDefaultMessage()
-                        )))
-                .toList();
-
-        return buildResponse(
-                HttpStatus.BAD_REQUEST,
-                "VALIDATION_ERROR",
-                "Validation failed",
-                fieldErrors
-        );
-    }
-    
-    private ResponseEntity<ApiErrorResponse> buildResponse(
-            HttpStatus status,
-            String code,
-            String message,
-            List<ApiFieldError> errors
-    ) {
-        return ResponseEntity.status(status)
-                .body(new ApiErrorResponse(
-                        Instant.now(),
-                        status.value(),
-                        code,
-                        message,
-                        errors
-                ));
-    }
-
-    private String getParameterName(String parameterName) {
-        return parameterName == null || parameterName.isBlank()
-                ? "request"
-                : parameterName;
-    }
-    
     private static void addRoles(Set<GrantedAuthority> authorities, Collection<String> roles) {
         if (roles == null) {
             return;

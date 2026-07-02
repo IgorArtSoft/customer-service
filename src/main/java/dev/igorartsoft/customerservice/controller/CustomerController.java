@@ -2,7 +2,6 @@ package dev.igorartsoft.customerservice.controller;
 
 import java.net.URI;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +27,9 @@ import dev.igorartsoft.customerservice.dto.CustomerResponse;
 import dev.igorartsoft.customerservice.dto.CustomerSelfPatchRequest;
 import dev.igorartsoft.customerservice.dto.CustomerSelfUpdateRequest;
 import dev.igorartsoft.customerservice.dto.CustomerUpdateRequest;
+import dev.igorartsoft.customerservice.dto.PagedResponse;
 import dev.igorartsoft.customerservice.service.CustomerService;
+import dev.igorartsoft.customerservice.validation.annotation.RequiredCustomerId;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -117,19 +118,19 @@ public class CustomerController {
     
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<CustomerResponse>> getCustomers(
+    public ResponseEntity<PagedResponse<CustomerResponse>> getCustomers(
             @RequestParam(defaultValue = "" + DEFAULT_PAGE)
-            @Min(value = 0, message = "Page must be greater than or equal to 0")
+            @Min(value = 0, message = "{pagination.page.min}")       
             int page,
 
             @RequestParam(defaultValue = "" + DEFAULT_SIZE)
-            @Min(value = 1, message = "Size must be greater than or equal to 1")
-            @Max(value = MAX_SIZE, message = "Size must be less than or equal to 100")
+            @Min(value = 1, message = "{pagination.page.min}")             
+            @Max(value = MAX_SIZE, message = "{pagination.size.max}")
             int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<CustomerResponse> response = customerService.getCustomers(pageable);
+        PagedResponse<CustomerResponse> response = customerService.getCustomers(pageable);
 
         return ResponseEntity.ok(response);
     }
@@ -137,16 +138,18 @@ public class CustomerController {
     @GetMapping("/{customerId}")
     @PreAuthorize("hasRole('ADMIN') or @customerSecurity.canAccessCustomer(#customerId, authentication)")
     public ResponseEntity<CustomerResponse> getCustomer(
-            @PathVariable String customerId
+            @PathVariable @RequiredCustomerId String customerId
     ) {
         CustomerResponse response = customerService.getCustomer(customerId);
         return ResponseEntity.ok(response);
     }
-
+    
+    
+    
     @PutMapping("/{customerId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CustomerResponse> updateCustomer(
-            @PathVariable String customerId,
+    		@PathVariable @RequiredCustomerId String customerId,
             @Valid @RequestBody CustomerUpdateRequest request
     ) {
         CustomerResponse response = customerService.updateCustomer(customerId, request);
@@ -166,7 +169,7 @@ public class CustomerController {
     @DeleteMapping("/{customerId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteCustomer(
-            @PathVariable String customerId
+    		@PathVariable @RequiredCustomerId String customerId
     ) {
         customerService.deleteCustomer(customerId);
         return ResponseEntity.noContent().build();

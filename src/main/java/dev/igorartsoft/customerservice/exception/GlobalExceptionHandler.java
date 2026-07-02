@@ -52,15 +52,6 @@ public class GlobalExceptionHandler {
         );
     }
 
-    /*
-     * Handles invalid @RequestBody DTO validation.
-     *
-     * Example:
-     * POST /customers
-     * {
-     *   "email": "bad-email"
-     * }
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
         List<ApiFieldError> fieldErrors = ex.getBindingResult()
@@ -77,12 +68,6 @@ public class GlobalExceptionHandler {
         );
     }
 
-    /*
-     * Handles validation on controller method parameters.
-     *
-     * Example:
-     * GET /customers?page=-1&size=20
-     */
     @ExceptionHandler(HandlerMethodValidationException.class)
     public ResponseEntity<ApiErrorResponse> handleHandlerMethodValidation(
             HandlerMethodValidationException ex
@@ -105,12 +90,6 @@ public class GlobalExceptionHandler {
         );
     }
 
-    /*
-     * Handles validation raised through jakarta.validation directly.
-     *
-     * Example:
-     * @Validated service/controller method with invalid parameter.
-     */
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiErrorResponse> handleConstraintViolation(ConstraintViolationException ex) {
         List<ApiFieldError> fieldErrors = ex.getConstraintViolations()
@@ -129,14 +108,6 @@ public class GlobalExceptionHandler {
         );
     }
 
-    /*
-     * Handles malformed JSON, invalid enum values, invalid date formats, etc.
-     *
-     * Example:
-     * {
-     *   "status": "BLOCKED"
-     * }
-     */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
         return buildResponse(
@@ -147,12 +118,6 @@ public class GlobalExceptionHandler {
         );
     }
 
-    /*
-     * Handles invalid query/path parameter type.
-     *
-     * Example:
-     * GET /customers?page=abc&size=20
-     */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiErrorResponse> handleMethodArgumentTypeMismatch(
             MethodArgumentTypeMismatchException ex
@@ -174,12 +139,6 @@ public class GlobalExceptionHandler {
         );
     }
 
-    /*
-     * Handles missing required query parameters.
-     *
-     * Example:
-     * @RequestParam without defaultValue and client does not send it.
-     */
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ApiErrorResponse> handleMissingServletRequestParameter(
             MissingServletRequestParameterException ex
@@ -197,12 +156,6 @@ public class GlobalExceptionHandler {
         );
     }
 
-    /*
-     * Handles unsupported Content-Type.
-     *
-     * Example:
-     * POST /customers with Content-Type: text/plain
-     */
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public ResponseEntity<ApiErrorResponse> handleHttpMediaTypeNotSupported(
             HttpMediaTypeNotSupportedException ex
@@ -215,12 +168,6 @@ public class GlobalExceptionHandler {
         );
     }
 
-    /*
-     * Handles unsupported HTTP method.
-     *
-     * Example:
-     * PUT /customers when only GET and POST are allowed.
-     */
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ApiErrorResponse> handleHttpRequestMethodNotSupported(
             HttpRequestMethodNotSupportedException ex
@@ -243,12 +190,6 @@ public class GlobalExceptionHandler {
         );
     }
 
-    /*
-     * Optional fallback.
-     *
-     * Good for keeping the public API contract stable.
-     * You may later add logging here.
-     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnexpectedException(Exception ex) {
         return buildResponse(
