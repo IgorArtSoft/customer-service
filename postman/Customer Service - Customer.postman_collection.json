@@ -1,0 +1,400 @@
+{
+  "info": {
+    "_postman_id": "bd1f295c-269e-4740-bb8b-7a1f5fb9ef16",
+    "name": "Customer Service - Customer",
+    "description": "Happy-path collection for the current customer-service CUSTOMER self-profile endpoints. Precondition: MongoDB must already contain a customer whose oidcIssuer and oidcSubject match this customer JWT.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "2951705"
+  },
+  "item": [
+    {
+      "name": "00 Auth",
+      "item": [
+        {
+          "name": "01 Get Customer Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Token endpoint returned 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test(\"Access token exists\", function () {",
+                  "    pm.expect(json.access_token).to.exist;",
+                  "});",
+                  "",
+                  "pm.environment.set(\"customerToken\", json.access_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password",
+                  "type": "text"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{customerClientId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{customerClientSecret}}",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "username",
+                  "value": "{{customerUsername}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{customerPassword}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloakBaseUrl}}/realms/{{realm}}/protocol/openid-connect/token",
+              "host": [
+                "{{keycloakBaseUrl}}"
+              ],
+              "path": [
+                "realms",
+                "{{realm}}",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            },
+            "description": "Uses Keycloak Direct Access Grants/password grant. The client_secret row is disabled by default. Enable it if your Keycloak client is confidential."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 Happy Path - My Profile",
+      "item": [
+        {
+          "name": "01 Get My Customer Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test(\"My profile response has expected shape\", function () {",
+                  "    pm.expect(json.customerId).to.exist;",
+                  "    pm.expect(json.email).to.exist;",
+                  "    pm.expect(json.firstName).to.exist;",
+                  "    pm.expect(json.lastName).to.exist;",
+                  "    pm.expect(json.status).to.exist;",
+                  "    pm.expect(json.address).to.exist;",
+                  "});",
+                  "",
+                  "pm.environment.set(\"myCustomerId\", json.customerId);",
+                  "pm.environment.set(\"myCustomerEmail\", json.email);",
+                  "pm.environment.set(\"myCustomerStatus\", json.status);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customers/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02 Update My Customer Profile - Full PUT",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test(\"Self full update values are returned\", function () {",
+                  "    pm.expect(json.customerId).to.eql(pm.environment.get(\"myCustomerId\"));",
+                  "    pm.expect(json.firstName).to.eql(\"Customer Self Updated\");",
+                  "    pm.expect(json.lastName).to.eql(\"Profile\");",
+                  "    pm.expect(json.phone).to.eql(\"+14165550111\");",
+                  "    pm.expect(json.email).to.eql(pm.environment.get(\"myCustomerEmail\"));",
+                  "    pm.expect(json.status).to.eql(pm.environment.get(\"myCustomerStatus\"));",
+                  "    pm.expect(json.address.city).to.eql(\"Richmond Hill\");",
+                  "    pm.expect(json.address.line2).to.eql(\"Unit 11\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Customer Self Updated\",\n  \"lastName\": \"Profile\",\n  \"phone\": \"+14165550111\",\n  \"address\": {\n    \"line1\": \"789 Self Service Road\",\n    \"line2\": \"Unit 11\",\n    \"city\": \"Richmond Hill\",\n    \"region\": \"ON\",\n    \"postalCode\": \"L4C 1A1\",\n    \"countryCode\": \"CA\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "03 Patch My Customer Profile - Basic Fields",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test(\"Self patch values are returned and restricted values remain\", function () {",
+                  "    pm.expect(json.customerId).to.eql(pm.environment.get(\"myCustomerId\"));",
+                  "    pm.expect(json.firstName).to.eql(\"Customer Self Patched\");",
+                  "    pm.expect(json.lastName).to.eql(\"Profile\");",
+                  "    pm.expect(json.phone).to.eql(\"4165550222\");",
+                  "    pm.expect(json.email).to.eql(pm.environment.get(\"myCustomerEmail\"));",
+                  "    pm.expect(json.status).to.eql(pm.environment.get(\"myCustomerStatus\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Customer Self Patched\",\n  \"phone\": \"4165550222\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "04 Patch My Customer Profile - Address Only",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test(\"Self address patch values are returned and existing address values remain\", function () {",
+                  "    pm.expect(json.address.line1).to.eql(\"789 Self Service Road\");",
+                  "    pm.expect(json.address.line2).to.eql(\"Unit 22\");",
+                  "    pm.expect(json.address.city).to.eql(\"Richmond Hill\");",
+                  "    pm.expect(json.address.region).to.eql(\"ON\");",
+                  "    pm.expect(json.address.postalCode).to.eql(\"L4C 2B2\");",
+                  "    pm.expect(json.address.countryCode).to.eql(\"CA\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address\": {\n    \"line2\": \"Unit 22\",\n    \"postalCode\": \"L4C 2B2\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "05 Final Get My Customer Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test(\"Final self profile state is correct\", function () {",
+                  "    pm.expect(json.customerId).to.eql(pm.environment.get(\"myCustomerId\"));",
+                  "    pm.expect(json.email).to.eql(pm.environment.get(\"myCustomerEmail\"));",
+                  "    pm.expect(json.status).to.eql(pm.environment.get(\"myCustomerStatus\"));",
+                  "    pm.expect(json.firstName).to.eql(\"Customer Self Patched\");",
+                  "    pm.expect(json.lastName).to.eql(\"Profile\");",
+                  "    pm.expect(json.phone).to.eql(\"4165550222\");",
+                  "    pm.expect(json.address.line1).to.eql(\"789 Self Service Road\");",
+                  "    pm.expect(json.address.line2).to.eql(\"Unit 22\");",
+                  "    pm.expect(json.address.city).to.eql(\"Richmond Hill\");",
+                  "    pm.expect(json.address.region).to.eql(\"ON\");",
+                  "    pm.expect(json.address.postalCode).to.eql(\"L4C 2B2\");",
+                  "    pm.expect(json.address.countryCode).to.eql(\"CA\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customers/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "These requests require an existing customer document linked to the authenticated Keycloak customer. The current GitHub code does not expose POST /customers/me, so this collection starts with GET /customers/me."
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{customerToken}}",
+        "type": "string"
+      }
+    ]
+  }
+}

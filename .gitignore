@@ -71,4 +71,7 @@ deploy/openshift/**/secret-local*.yml
 deploy/openshift/**/secrets-local*.yml
 deploy/openshift/**/.env
 
-
+# Postman local environments may contain passwords, tokens, client secrets
+postman/*Local.postman_environment.json
+postman/*local*.postman_environment.json
+postman/*secret*.postman_environment.json

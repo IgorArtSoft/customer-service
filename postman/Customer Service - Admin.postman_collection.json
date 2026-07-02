@@ -1,0 +1,787 @@
+{
+  "info": {
+    "_postman_id": "12e589ed-bed3-4e32-98f9-2c2934b24192",
+    "name": "Customer Service - Admin",
+    "description": "Happy-path collection for the current customer-service ADMIN endpoints. Run 00 Auth first, then run the requests in 01 Happy Path sequentially.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "2951705"
+  },
+  "item": [
+    {
+      "name": "00 Auth",
+      "item": [
+        {
+          "name": "01 Get Admin Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Token endpoint returned 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test(\"Access token exists\", function () {",
+                  "    pm.expect(json.access_token).to.exist;",
+                  "});",
+                  "",
+                  "pm.environment.set(\"adminToken\", json.access_token);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password",
+                  "type": "text"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{adminClientId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{adminClientSecret}}",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "username",
+                  "value": "{{adminUsername}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPassword}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloakBaseUrl}}/realms/{{realm}}/protocol/openid-connect/token",
+              "host": [
+                "{{keycloakBaseUrl}}"
+              ],
+              "path": [
+                "realms",
+                "{{realm}}",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            },
+            "description": "Uses Keycloak Direct Access Grants/password grant. The client_secret row is disabled by default. Enable it if your Keycloak client is confidential."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 Happy Path",
+      "item": [
+        {
+          "name": "01 Create Customer",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const suffix = Date.now();",
+                  "pm.environment.set(\"customerId\", `CUST-${suffix}`);",
+                  "pm.environment.set(\"customerEmail\", `customer.${suffix}@example.com`);",
+                  "pm.environment.set(\"customerUpdatedEmail\", `customer.${suffix}.updated@example.com`);",
+                  "pm.environment.set(\"customerPhonePatched\", \"4165557777\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Location header exists\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Location\")).to.exist;",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test(\"Created customer has expected fields\", function () {",
+                  "    pm.expect(json.customerId).to.eql(pm.environment.get(\"customerId\"));",
+                  "    pm.expect(json.email).to.eql(pm.environment.get(\"customerEmail\"));",
+                  "    pm.expect(json.firstName).to.eql(\"Igor\");",
+                  "    pm.expect(json.lastName).to.eql(\"Artimenko\");",
+                  "    pm.expect(json.status).to.eql(\"ACTIVE\");",
+                  "    pm.expect(json.createdAt).to.exist;",
+                  "    pm.expect(json.updatedAt).to.exist;",
+                  "});",
+                  "",
+                  "pm.environment.set(\"createdAt\", json.createdAt);",
+                  "pm.environment.set(\"updatedAtAfterCreate\", json.updatedAt);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{customerId}}\",\n  \"firstName\": \"Igor\",\n  \"lastName\": \"Artimenko\",\n  \"email\": \"{{customerEmail}}\",\n  \"phone\": \"+14165551234\",\n  \"address\": {\n    \"line1\": \"123 Test Street\",\n    \"line2\": \"Unit 5\",\n    \"city\": \"Richmond Hill\",\n    \"region\": \"ON\",\n    \"postalCode\": \"L4B 1A1\",\n    \"countryCode\": \"CA\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02 Get Customer By ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test(\"Returned expected customer\", function () {",
+                  "    pm.expect(json.customerId).to.eql(pm.environment.get(\"customerId\"));",
+                  "    pm.expect(json.email).to.eql(pm.environment.get(\"customerEmail\"));",
+                  "    pm.expect(json.address.countryCode).to.eql(\"CA\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customers/{{customerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers",
+                "{{customerId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "03 List Customers - Default Paging",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test(\"Paged response shape is valid\", function () {",
+                  "    pm.expect(json.content).to.be.an(\"array\");",
+                  "    pm.expect(json.page).to.be.a(\"number\");",
+                  "    pm.expect(json.size).to.be.a(\"number\");",
+                  "    pm.expect(json.totalElements).to.be.a(\"number\");",
+                  "    pm.expect(json.totalPages).to.be.a(\"number\");",
+                  "    pm.expect(json.first).to.be.a(\"boolean\");",
+                  "    pm.expect(json.last).to.be.a(\"boolean\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "04 List Customers - Page Size 5",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test(\"Page and size match request\", function () {",
+                  "    pm.expect(json.page).to.eql(0);",
+                  "    pm.expect(json.size).to.eql(5);",
+                  "    pm.expect(json.content).to.be.an(\"array\");",
+                  "    pm.expect(json.content.length).to.be.at.most(5);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customers?page=0&size=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "05 Update Customer - Full PUT",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test(\"Full update values are returned\", function () {",
+                  "    pm.expect(json.customerId).to.eql(pm.environment.get(\"customerId\"));",
+                  "    pm.expect(json.firstName).to.eql(\"Igor Updated\");",
+                  "    pm.expect(json.email).to.eql(pm.environment.get(\"customerUpdatedEmail\"));",
+                  "    pm.expect(json.phone).to.eql(\"+14165559876\");",
+                  "    pm.expect(json.status).to.eql(\"ACTIVE\");",
+                  "    pm.expect(json.address.city).to.eql(\"Toronto\");",
+                  "    pm.expect(json.address.line2).to.eql(\"Suite 10\");",
+                  "    pm.expect(json.updatedAt).to.exist;",
+                  "});",
+                  "",
+                  "pm.environment.set(\"updatedAtAfterPut\", json.updatedAt);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Igor Updated Santa's information\",\n  \"lastName\": \"Artimenko it was Claus\",\n  \"email\": \"{{customerUpdatedEmail}}\",\n  \"phone\": \"+14165559877\",\n  \"status\": \"ACTIVE\",\n  \"address\": {\n    \"line1\": \"456 Updated Avenue\",\n    \"line2\": \"Suite 10\",\n    \"city\": \"Toronto\",\n    \"region\": \"ON\",\n    \"postalCode\": \"M2N 1N1\",\n    \"countryCode\": \"CA\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/{{customerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers",
+                "{{customerId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "06 Get Customer After Full Update",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test(\"Updated values were persisted\", function () {",
+                  "    pm.expect(json.customerId).to.eql(pm.environment.get(\"customerId\"));",
+                  "    pm.expect(json.firstName).to.eql(\"Igor Updated\");",
+                  "    pm.expect(json.email).to.eql(pm.environment.get(\"customerUpdatedEmail\"));",
+                  "    pm.expect(json.address.line1).to.eql(\"456 Updated Avenue\");",
+                  "    pm.expect(json.address.city).to.eql(\"Toronto\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customers/{{customerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers",
+                "{{customerId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "07 Patch Customer - Basic Fields",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test(\"Basic patch values are returned and existing values remain\", function () {",
+                  "    pm.expect(json.customerId).to.eql(pm.environment.get(\"customerId\"));",
+                  "    pm.expect(json.firstName).to.eql(\"Igor Patched\");",
+                  "    pm.expect(json.lastName).to.eql(\"Artimenko\");",
+                  "    pm.expect(json.email).to.eql(pm.environment.get(\"customerUpdatedEmail\"));",
+                  "    pm.expect(json.phone).to.eql(pm.environment.get(\"customerPhonePatched\"));",
+                  "    pm.expect(json.address.city).to.eql(\"Toronto\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Igor Patched\",\n  \"phone\": \"{{customerPhonePatched}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/{{customerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers",
+                "{{customerId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "08 Patch Customer - Address Only",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test(\"Address patch values are returned and existing address values remain\", function () {",
+                  "    pm.expect(json.address.line1).to.eql(\"456 Updated Avenue\");",
+                  "    pm.expect(json.address.line2).to.eql(\"Suite 20\");",
+                  "    pm.expect(json.address.city).to.eql(\"Toronto\");",
+                  "    pm.expect(json.address.region).to.eql(\"ON\");",
+                  "    pm.expect(json.address.postalCode).to.eql(\"M2N 2N2\");",
+                  "    pm.expect(json.address.countryCode).to.eql(\"CA\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address\": {\n    \"line2\": \"Suite 20\",\n    \"postalCode\": \"M2N 2N2\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/{{customerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers",
+                "{{customerId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "09 Patch Customer - Set Status INACTIVE",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test(\"Customer status is INACTIVE\", function () {",
+                  "    pm.expect(json.status).to.eql(\"INACTIVE\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"INACTIVE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/{{customerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers",
+                "{{customerId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "10 Patch Customer - Set Status ACTIVE",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test(\"Customer status is ACTIVE\", function () {",
+                  "    pm.expect(json.status).to.eql(\"ACTIVE\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACTIVE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/{{customerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers",
+                "{{customerId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "11 Final Get Customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "pm.test(\"Final state is correct\", function () {",
+                  "    pm.expect(json.customerId).to.eql(pm.environment.get(\"customerId\"));",
+                  "    pm.expect(json.email).to.eql(pm.environment.get(\"customerUpdatedEmail\"));",
+                  "    pm.expect(json.firstName).to.eql(\"Igor Patched\");",
+                  "    pm.expect(json.lastName).to.eql(\"Artimenko\");",
+                  "    pm.expect(json.phone).to.eql(pm.environment.get(\"customerPhonePatched\"));",
+                  "    pm.expect(json.status).to.eql(\"ACTIVE\");",
+                  "    pm.expect(json.address.line1).to.eql(\"456 Updated Avenue\");",
+                  "    pm.expect(json.address.line2).to.eql(\"Suite 20\");",
+                  "    pm.expect(json.address.city).to.eql(\"Toronto\");",
+                  "    pm.expect(json.address.region).to.eql(\"ON\");",
+                  "    pm.expect(json.address.postalCode).to.eql(\"M2N 2N2\");",
+                  "    pm.expect(json.address.countryCode).to.eql(\"CA\");",
+                  "    pm.expect(json.createdAt).to.exist;",
+                  "    pm.expect(json.updatedAt).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customers/{{customerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers",
+                "{{customerId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "12 Cleanup - Delete Customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 204 No Content\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});",
+                  "",
+                  "pm.test(\"Response body is empty\", function () {",
+                  "    pm.expect(pm.response.text()).to.eql(\"\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customers/{{customerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers",
+                "{{customerId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{adminToken}}",
+        "type": "string"
+      }
+    ]
+  }
+}
