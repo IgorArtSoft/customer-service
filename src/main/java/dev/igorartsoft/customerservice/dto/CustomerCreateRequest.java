@@ -1,5 +1,6 @@
 package dev.igorartsoft.customerservice.dto;
 
+import dev.igorartsoft.customerservice.validation.CustomerValidationRules;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -11,7 +12,7 @@ public record CustomerCreateRequest(
         @NotBlank(message = "Customer id is required")
         @Size(min = 3, max = 64, message = "Customer id must be between 3 and 64 characters")
         @Pattern(
-                regexp = CustomerValidationPatterns.CUSTOMER_ID,
+                regexp = CustomerValidationRules.CUSTOMER_ID,
                 message = "Customer id may contain only letters, numbers, underscore, or hyphen"
         )
         String customerId,
@@ -30,7 +31,7 @@ public record CustomerCreateRequest(
         String email,
         
         @Pattern(
-                regexp = CustomerValidationPatterns.PHONE,
+                regexp = CustomerValidationRules.PHONE,
                 message = "Phone must contain 7-15 digits, optionally starting with + country code, for example +14165551234 or 4165551234"
         )
         String phone,

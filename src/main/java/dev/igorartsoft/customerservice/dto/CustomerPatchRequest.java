@@ -1,10 +1,10 @@
 package dev.igorartsoft.customerservice.dto;
 
 import dev.igorartsoft.customerservice.model.CustomerStatus;
+import dev.igorartsoft.customerservice.validation.CustomerValidationRules;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
@@ -21,7 +21,7 @@ public record CustomerPatchRequest(
         String email,
         
         @Pattern(
-                regexp = CustomerValidationPatterns.PHONE,
+                regexp = CustomerValidationRules.PHONE,
                 message = "Phone must contain 7-15 digits, optionally starting with + country code, for example +14165551234 or 4165551234"
         )
         String phone,
